@@ -1,0 +1,2 @@
+# WCRR-Business-Vault-Enterprise-Self-Healing-Suite
+The WCRR Business Vault &amp; Enterprise Self-Healing Suite is a high-security, client-side encryption and C60 self-healing data preservation framework designed for businesses and individuals. Running entirely within a local web browser environment, it features mandatory AES-256 encryption, bulk directory packaging, and a self-healing software design.
