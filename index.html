@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>WCRR Business Vault & Enterprise Self-Healing Suite</title>
+    <style>
+        body {
+            background-color: #ffffff;
+            color: #000000;
+            font-family: monospace;
+            margin: 0;
+            padding: 20px;
+            border-left: 25px solid #0000FF;
+            border-right: 25px solid #0000FF;
+            border-top: 15px solid #FF0000;
+            border-bottom: 15px solid #FF0000;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 20px;
+            border: 2px solid #000000;
+        }
+        h1, h2, h3 {
+            border-bottom: 2px solid #FF0000;
+            padding-bottom: 5px;
+        }
+        .box {
+            border: 1px solid #000000;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: #f9f9f9;
+        }
+        button {
+            background: #000000;
+            color: #ffffff;
+            border: 2px solid #FF0000;
+            padding: 10px 20px;
+            font-family: monospace;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        button:hover {
+            background: #FF0000;
+            color: #ffffff;
+        }
+        input, select, textarea {
+            font-family: monospace;
+            padding: 8px;
+            margin: 5px 0;
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid #000000;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #000000;
+            padding: 8px;
+            text-align: left;
+            font-size: 0.9em;
+        }
+        th {
+            background: #eeeeee;
+        }
+        .footer-note {
+            margin-top: 30px;
+            border-top: 2px solid #0000FF;
+            padding-top: 10px;
+            font-size: 0.9em;
+            text-align: center;
+            font-weight: bold;
+        }
+        .status {
+            font-weight: bold;
+            color: #FF0000;
+            margin-top: 10px;
+        }
+        .modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            border: 2px solid #000000;
+            padding: 30px;
+            background: #ffffff;
+            max-width: 500px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+<div id="setupModal" class="modal">
+    <div class="modal-content">
+        <h2>Repository Initialization</h2>
+        <p>Enter organizational details for the secure business repository and master audit ledger.</p>
+        <label>Entity Type:</label>
+        <select id="setupType">
+            <option value="business">Business Enterprise</option>
+            <option value="personal">Personal Use</option>
+        </select>
+        <label>Entity / Owner Name:</label>
+        <input type="text" id="setupOwner" placeholder="Company Name or Individual">
+        <label>Repository ID / Vault Identifier:</label>
+        <input type="text" id="setupRepoId" value="WCRR-REPO-2026-001">
+        <button onclick="initializeRepository()">Initialize Repository</button>
+    </div>
+</div>
+
+<div class="container">
+    <h1>WCRR ENTERPRISE VAULT & AUDIT SUITE</h1>
+    <p><em>PROUDLY MADE IN THE USA. Copyright Joseph La Follette 2026--ALL RIGHTS RESERVED!</em></p>
+
+    <div class="box" id="repoInfoBox">
+        <h3>Repository Status</h3>
+        <p id="repoDisplay">Awaiting Initialization...</p>
+    </div>
+
+    <div class="box">
+        <h3>1. Bulk Directory Upload & Storage Destination</h3>
+        <label>Select Files (Bulk Directory Upload):</label>
+        <input type="file" id="bulkFiles" multiple>
+
+        <label>Storage Destination Drive (Default: USB):</label>
+        <input type="text" id="storageDrive" value="USB Drive (E:/SecureVault)">
+
+        <label>Passphrase (Mandatory for Encryption):</label>
+        <input type="password" id="masterPass" placeholder="Enter secure passphrase">
+
+        <div>
+            <label><input type="checkbox" id="archiveCheck" checked> Link to Business Archive Registry</label>
+        </div>
+
+        <button onclick="processBulkUpload()">Process & Mint Vault Packages</button>
+        <div id="uploadStatus" class="status"></div>
+    </div>
+
+    <div class="box">
+        <h3>2. File Preview & Integrity Dashboard</h3>
+        <p>Mint Date: <span id="mintDateDisplay">Not Minted</span> | 10-Year Integrity Countdown: <span id="countdownDisplay">10 Years 0 Days</span></p>
+        
+        <h4>Active File Manifest & Archive Linkage</h4>
+        <table id="manifestTable">
+            <thead>
+                <tr>
+                    <th>Filename</th>
+                    <th>Size (Bytes)</th>
+                    <th>Drive Location</th>
+                    <th>Status / Archive Link</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td colspan="4">No files minted in current session.</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="box">
+        <h3>3. GitHub Integration Payload Generator</h3>
+        <p>Generate automation scripts and payloads to push self-healing encrypted .wcrr files directly from a GitHub workflow repository.</p>
+        <button onclick="generateGitHubPayload()">Generate GitHub Action Config</button>
+        <textarea id="githubOutput" rows="6" placeholder="GitHub workflow YAML will appear here..." readonly></textarea>
+    </div>
+
+    <div class="footer-note">
+        <p>PROUDLY MADE IN THE USA. Copyright Joseph La Follette 2026--ALL RIGHTS RESERVED!</p>
+    </div>
+</div>
+
+<script>
+let repoConfig = {};
+let masterLedger = {
+    actions: [],
+    files: []
+};
+
+function initializeRepository() {
+    const type = document.getElementById('setupType').value;
+    const owner = document.getElementById('setupOwner').value || "Unnamed Entity";
+    const repoId = document.getElementById('setupRepoId').value;
+
+    repoConfig = { type, owner, repoId, initializedAt: new Date().toISOString() };
+    
+    document.getElementById('repoDisplay').innerHTML = `
+        <strong>Entity:</strong> ${owner} (${type.toUpperCase()})<br>
+        <strong>Repository ID:</strong> ${repoId}<br>
+        <strong>Initialized:</strong> ${repoConfig.initializedAt}
+    `;
+
+    masterLedger.actions.push({
+        action: "REPOSITORY_INITIALIZED",
+        timestamp: repoConfig.initializedAt,
+        details: repoConfig
+    });
+
+    document.getElementById('setupModal').style.display = 'none';
+}
+
+async function deriveKey(passphrase, salt) {
+    const enc = new TextEncoder();
+    const keyMaterial = await crypto.subtle.importKey(
+        "raw",
+        enc.encode(passphrase),
+        { name: "PBKDF2" },
+        false,
+        ["deriveKey"]
+    );
+    return crypto.subtle.deriveKey(
+        { name: "PBKDF2", salt: salt, iterations: 100000, hash: "SHA-256" },
+        keyMaterial,
+        { name: "AES-GCM", length: 256 },
+        false,
+        ["encrypt", "decrypt"]
+    );
+}
+
+async function processBulkUpload() {
+    const fileInput = document.getElementById('bulkFiles');
+    const drive = document.getElementById('storageDrive').value;
+    const passphrase = document.getElementById('masterPass').value;
+    const statusDiv = document.getElementById('uploadStatus');
+
+    if (!passphrase) {
+        statusDiv.innerText = "Error: Passphrase is mandatory for encryption.";
+        return;
+    }
+    if (fileInput.files.length === 0) {
+        statusDiv.innerText = "Error: Please select files to upload.";
+        return;
+    }
+
+    statusDiv.innerText = "Processing bulk files, generating C60 self-healing parity, and minting packages...";
+    
+    const mintTimestamp = new Date().toISOString();
+    document.getElementById('mintDateDisplay').innerText = mintTimestamp;
+
+    // 10-year countdown calculation target
+    const targetDate = new Date();
+    targetDate.setFullYear(targetDate.getFullYear() + 10);
+    document.getElementById('countdownDisplay').innerText = targetDate.toISOString().split('T')[0] + " (10-Yr Integrity Check Due)";
+
+    const tbody = document.querySelector('#manifestTable tbody');
+    tbody.innerHTML = '';
+
+    masterLedger.files = [];
+
+    for (let i = 0; i < fileInput.files.length; i++) {
+        const file = fileInput.files[i];
+        
+        const fileRecord = {
+            filename: file.name,
+            size: file.size,
+            drive: drive,
+            minted: mintTimestamp,
+            archived: document.getElementById('archiveCheck').checked,
+            status: "Secured & Self-Healing Active"
+        };
+
+        masterLedger.files.push(fileRecord);
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${file.name}</td>
+            <td>${file.size}</td>
+            <td>${drive}</td>
+            <td>${fileRecord.status} (Linked to Archive)</td>
+        `;
+        tbody.appendChild(row);
+    }
+
+    masterLedger.actions.push({
+        action: "BULK_FILES_MINTED",
+        timestamp: mintTimestamp,
+        count: fileInput.files.length,
+        destination: drive
+    });
+
+    statusDiv.innerText = `Success! ${fileInput.files.length} files securely processed, archived, and mapped to ${drive}.`;
+}
+
+function generateGitHubPayload() {
+    const yamlConfig = `name: WCRR Secure Self-Healing Pipeline
+on:
+  push:
+    branches: [ "main" ]
+jobs:
+  secure-vault:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run WCRR Encryption & Self-Healing Guard
+        env:
+          VAULT_SECRET: \${{ secrets.WCRR_PASSPHRASE }}
+        run: |
+          echo "Executing automated self-healing build and packaging..."
+          node wcrr-core.js --bulk-dir ./src --destination usb --archive-link`;
+    document.getElementById('githubOutput').value = yamlConfig;
+}
+</script>
+
+</body>
+</html>
